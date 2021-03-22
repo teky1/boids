@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html style="padding:0;margin:0;">
+	<head>
+		<title>Canvas Particles Test</title>
+	    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	<body style="padding:0;margin:0;overflow: hidden;">
+		<canvas id="screen"></canvas>
+
+		<script>
+
+			function randomRange(low, high){
+				var difference = high-low;
+				var output = Math.random();
+				output = Math.round(output*difference)+low;
+				return output;
+
+			}
+
+			var canvas = document.getElementById('screen');
+			var ctx = canvas.getContext('2d');
+			boids = [];
+
+
+			function canvasResize() {
+				canvas.width  = window.innerWidth;
+				canvas.height = window.innerHeight;
+				ctx.fillStyle = '#2C2F33';
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+			}
+			canvasResize();
+
+			window.onresize = canvasResize;
+
+
+
+			function Particle(x, y, size) {
+				this.size = size || randomRange(5, 20);
+
+				// this.posX = randomRange(0, canvas.width - this.size - 100);
+				// this.posY = randomRange(0, canvas.height - this.size - 100);
+				this.posX = x || canvas.width/2;
+				this.posY = y || canvas.height/2;
+
+				this.vx = randomRange(-15, 15);
+				this.vy = randomRange(-15, 15);
+				this.gy = 0.25;
+				this.gx = 0.0;
+				this.color = 'hsla('+randomRange(0, 360).toString()+', 100%, 50%, '
+				this.life = 1;
+				this.lifeIncrements = 0.005;
+				particles.push(this)
+			}
+			Particle.prototype.draw = function(){
+				if(this.life > 0){
+					color = this.color+this.life.toString()+')';
+					// color = this.color;
+					// console.log(this.color)
+					ctx.fillStyle = color;
+					// ctx.fillRect(this.posX, this.posY, this.size, this.size);
+					ctx.beginPath();
+    				ctx.arc(this.posX+this.size/2, this.posY+this.size/2, this.size/2, 0, 2 * Math.PI);
+   					ctx.fill();
+
+					this.posX += this.vx;
+					this.posY += this.vy;
+					
+					
+					if(this.posX+this.size>=canvas.width || this.posX <= 0){
+						this.vx = this.vx*-0.7;
+						if(this.posX <= 0){
+							this.posX = 0;
+						} else {
+							this.posX = canvas.width - this.size;
+						}
+					}
+					if(this.posY+this.size>=canvas.height || this.posY <= 0){
+						this.vy = this.vy*-0.6;
+						this.vx = this.vx*0.7
+						if(this.posY <= 0){
+							this.posY = 0;
+						} else {
+							this.posY = canvas.height - this.size;
+						}
+					}
+					
+					this.vy += this.gy;
+					this.vx += this.gx;
+					this.life -= this.lifeIncrements;
+				}
+			}
+
+
+			class Boid {
+				constructor(){
+					this.x = canvas.width/2;
+					this.y = canvas.height/2;
+					this.angle = 2*Math.PI*Math.random();
+					this.speed = Math.random()*10;
+					this.size = 10;
+				}
+				draw(){
+					ctx.fillStyle = "white";
+					ctx.beginPath();
+					ctx.moveTo(this.x, this.y);
+					ctx.lineTo(this.x+this.size*Math.sin(this.angle+1.35*Math.PI), this.y+this.size*Math.cos(this.angle+1.35*Math.PI));
+					ctx.lineTo(this.x+this.size*1.3*Math.sin(this.angle), this.y+this.size*1.3*Math.cos(this.angle));
+					ctx.lineTo(this.x+this.size*Math.sin(this.angle+0.65*Math.PI), this.y+this.size*Math.cos(this.angle+0.65*Math.PI));
+					ctx.fill();
+
+					this.x = this.x + this.speed * Math.sin(this.angle);
+					this.y = this.y + this.speed * Math.cos(this.angle);
+					this.angle = this.angle + 0.02*Math.random();
+				}
+			}
+
+			for(var i = 0; i < 1000; i++){
+				boids.push(new Boid());
+			}
+
+
+
+			setInterval(function(){
+				canvasResize();
+				for(var i = 0; i < boids.length; i++){
+					boids[i].draw();
+				}
+			}, 7);
+		</script>
+	</body>
+</html>
